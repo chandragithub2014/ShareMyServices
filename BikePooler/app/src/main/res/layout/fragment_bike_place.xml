@@ -1,0 +1,116 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.hyd.bikepool.bikepooler.bikemap.BikePlaceFragment"
+    >
+
+   <RelativeLayout
+       android:layout_width="match_parent"
+       android:layout_height="match_parent"
+       android:orientation="vertical"
+       >
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+       android:layout_alignParentTop="true"
+        android:id="@+id/header"
+        android:layout_margin="20dp"
+       >
+
+<TextView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="From"
+    android:textSize="20sp"
+    android:paddingLeft="10dp"
+    android:textColor="#ffffff"
+    android:background="#007FFF"/>
+
+       <AutoCompleteTextView
+       android:id="@+id/autoCompleteTextView"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       android:ems="10"
+       android:hint="From" >
+
+       <requestFocus />
+   </AutoCompleteTextView>
+
+       <TextView
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="To"
+           android:paddingLeft="10dp"
+           android:textSize="20sp"
+           android:textColor="#ffffff"
+           android:background="#007FFF"/>
+
+       <AutoCompleteTextView
+           android:id="@+id/to_autoCompleteTextView"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:ems="10"
+           android:hint="To" >
+
+
+       </AutoCompleteTextView>
+    </LinearLayout>
+       <TextView
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Date and time"
+           android:paddingLeft="10dp"
+           android:textSize="20sp"
+           android:background="#007FFF"
+          android:layout_below="@+id/header"
+          />
+
+       <LinearLayout
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:orientation="horizontal"
+           android:paddingTop="20dp"
+           android:layout_marginRight="10dp"
+          android:layout_centerInParent="true"
+           >
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:paddingLeft="10dp"
+            android:background="#7A7A7A"
+            android:textColor="#000000"
+            android:id="@+id/currentDate"
+            android:layout_weight="1"
+            android:textSize="20sp"/>
+           <TextView
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:background="#7A7A7A"
+               android:textColor="#000000"
+               android:id="@+id/pickup_time"
+               android:layout_weight="1"
+               android:text="Time"
+               android:textSize="20sp"
+               android:layout_marginLeft="10dp"/>
+
+
+       </LinearLayout>
+
+
+       <Button
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:text="Next step"
+           android:id="@+id/next"
+           android:gravity="center"
+           android:layout_marginLeft="10dp"
+           android:layout_marginRight="10dp"
+           android:layout_alignParentBottom="true"/>
+
+   </RelativeLayout>
+</FrameLayout>

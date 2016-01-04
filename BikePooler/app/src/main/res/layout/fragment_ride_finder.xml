@@ -1,0 +1,48 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.hyd.bikepool.bikepooler.bikemap.RideFinderFragment"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <include android:id="@+id/from_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            layout="@layout/fromlayout">
+         </include>
+
+        <AutoCompleteTextView
+        android:id="@+id/leaving_to"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/round"
+        android:hint="Leaving to"
+
+            android:ems="10"
+
+            android:layout_margin="10dp"
+        android:padding="8dp" />
+
+        <include
+            layout="@layout/datetimelayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/date_time_layout">
+
+        </include>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/find_rides"
+            android:text="Search"
+            android:layout_margin="16dp"
+            android:gravity="center"/>
+    </LinearLayout>
+
+</FrameLayout>

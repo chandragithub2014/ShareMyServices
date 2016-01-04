@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#009ACD"
+        android:textColor="#ffffff"
+        android:text="Price"
+        android:textSize="20sp"
+        android:paddingLeft="16dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:singleLine="true"
+        android:id="@+id/from_addr"
+
+        android:layout_marginLeft="16dp"
+        android:background="#EEE8AA"
+        android:textColorLink="#000000"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="16dp"
+        android:textSize="20sp"
+        android:ellipsize="end"/>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#009ACD"
+        android:textColor="#ffffff"
+        android:text="TO"
+        android:textSize="20sp"
+        android:paddingLeft="10dp"/>
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:singleLine="true"
+        android:id="@+id/to_addr"
+        android:layout_marginLeft="16dp"
+        android:background="#EEE8AA"
+        android:textColorLink="#000000"
+        android:layout_marginTop="10dp"
+        android:layout_marginRight="16dp"
+        android:textSize="20sp"
+        android:ellipsize="end"/>
+
+   <include
+       android:id="@+id/pluse_minus_layout"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       layout="@layout/price_increment_decrement"
+       ></include>
+
+
+    <include
+        android:id="@+id/comments_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        layout="@layout/pooler_comment"
+        ></include>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:text="Publish"
+        android:textColor="#ffffff"
+        android:background="#009ACD"
+        android:id="@+id/publish_btn"/>
+
+</LinearLayout>

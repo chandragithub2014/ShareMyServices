@@ -1,0 +1,44 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/framelayout"
+    tools:context="com.hyd.bikepool.bikepooler.bikemap.BikeMapFragment">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/framelayoutt">
+
+        <TextView
+            android:id="@+id/latlongLocation"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:gravity="bottom"
+            android:layout_alignParentTop="true"
+            android:background="#ff058fff"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:textColor="#ffffffff"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp" />
+
+    <fragment
+        android:id="@+id/map"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        class="com.google.android.gms.maps.SupportMapFragment"
+        android:layout_below="@+id/latlongLocation"
+        android:layout_above="@+id/footer_layout"/>
+
+   <include
+       android:id="@+id/footer_layout"
+       android:layout_alignParentBottom="true"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"
+       layout="@layout/footer_bike_pool"
+       ></include>
+
+    </RelativeLayout>
+
+</FrameLayout>

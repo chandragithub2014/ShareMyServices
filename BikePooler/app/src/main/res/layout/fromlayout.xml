@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="horizontal" >
+
+<AutoCompleteTextView
+android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:background="@drawable/leftroundborder"
+    android:hint="Leaving from"
+    android:padding="8dp"
+    android:singleLine="true"
+    android:ems="10"
+    android:id="@+id/from_location"/>
+
+<ImageView
+    android:layout_width="40dp"
+    android:layout_height="41dp"
+    android:layout_marginLeft="-1dp"
+    android:background="@drawable/rightroundborder"
+    android:padding="5dp"
+    android:id="@+id/curloc"
+    android:src="@drawable/location_icon" />
+    </LinearLayout>
