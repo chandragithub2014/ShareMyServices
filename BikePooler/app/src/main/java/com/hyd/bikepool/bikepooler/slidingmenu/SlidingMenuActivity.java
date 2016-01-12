@@ -16,6 +16,7 @@ import com.hyd.bikepool.bikepooler.SharedPreferencesUtils;
 import com.hyd.bikepool.bikepooler.bikemap.BikePlaceFragment;
 import com.hyd.bikepool.bikepooler.bikemap.RideFinderFragment;
 import com.hyd.bikepool.bikepooler.fragment.BikePoolerMapFragment;
+import com.hyd.bikepool.bikepooler.fragment.ProfileFragment;
 import com.hyd.bikepool.bikepooler.webservicehelpers.BikeConstants;
 
 public class SlidingMenuActivity extends AppCompatActivity  implements FragmentDrawer.FragmentDrawerListener{
@@ -70,16 +71,22 @@ public class SlidingMenuActivity extends AppCompatActivity  implements FragmentD
                 break;
             case 1:
                 getFragmentManager().beginTransaction()
-                        .replace(R.id.mapparentLayout, new BikePlaceFragment())
-                        .commit();
-                break;
-            case 2:
-                getFragmentManager().beginTransaction()
                         .replace(R.id.mapparentLayout, new RideFinderFragment())
                         .commit();
                 break;
+            case 2:
 
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.mapparentLayout, new BikePlaceFragment())
+                        .commit();
+                break;
             case 3:
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.mapparentLayout, new ProfileFragment())
+                        .commit();
+                break;
+
+            case 4:
               /*  SharedPreferencesUtils  prefs = new SharedPreferencesUtils();
                 prefs.saveBooleanPreferences(SlidingMenuActivity.this, BikeConstants.BIKE_BOOLEAN_PREFS_DATA, false);*/
                 LoginManager.getInstance().logOut();

@@ -59,7 +59,7 @@ public class GooglePlusService implements GoogleApiClient.ConnectionCallbacks,
     }
 
 
-    public void startMessageService(Context ctx,String type){
+    public void startMessageService(Context ctx){
         this.ctx=ctx;
         this.type=type;
         Log.d("TAG", "Message Type:::" + type);
@@ -87,7 +87,7 @@ public class GooglePlusService implements GoogleApiClient.ConnectionCallbacks,
     /**
      * Fetching user's information name, email, profile pic
      * */
-    private void getProfileInformation() {
+    public void getProfileInformation() {
         try {
 
             if (mGoogleApiClient != null) {
@@ -104,19 +104,7 @@ public class GooglePlusService implements GoogleApiClient.ConnectionCallbacks,
                     }
                 });
 
-            /*if (Plus.PeopleApi.getCurrentPerson(mGoogleApiClient) != null) {
-                Person currentPerson = Plus.PeopleApi
-                        .getCurrentPerson(mGoogleApiClient);
-                String personName = currentPerson.getDisplayName();
-                String personPhotoUrl = currentPerson.getImage().getUrl();
-                String personGooglePlusProfile = currentPerson.getUrl();
-                String email = Plus.AccountApi.getAccountName(mGoogleApiClient);
-
-                Log.e("GooglePlusService", "Name: " + personName + ", plusProfile: "
-                        + personGooglePlusProfile + ", email: " + email
-                        + ", Image: " + personPhotoUrl);
-
-             *//*   txtName.setText(personName);
+   /*   txtName.setText(personName);
                 txtEmail.setText(email);
 
                 // by default the profile url gives 50x50 px image only

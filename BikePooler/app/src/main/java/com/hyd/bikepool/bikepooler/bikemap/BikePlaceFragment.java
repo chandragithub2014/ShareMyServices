@@ -22,7 +22,10 @@ import android.widget.Toast;
 
 import com.hyd.bikepool.bikepooler.R;
 import com.hyd.bikepool.bikepooler.SharedPreferencesUtils;
+import com.hyd.bikepool.bikepooler.interfaces.DistanceFinderReceiveListener;
 import com.hyd.bikepool.bikepooler.webservicehelpers.BikeConstants;
+import com.hyd.bikepool.bikepooler.webservicehelpers.BikePoolerAsyncTaskHelper;
+import com.hyd.bikepool.bikepooler.webservicehelpers.DistanceTimeFinderAsyncTaskHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,13 +42,14 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link BikePlaceFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class BikePlaceFragment extends Fragment implements AdapterView.OnItemClickListener, View.OnClickListener {
+public class BikePlaceFragment extends Fragment implements AdapterView.OnItemClickListener, View.OnClickListener,DistanceFinderReceiveListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -89,6 +93,17 @@ public class BikePlaceFragment extends Fragment implements AdapterView.OnItemCli
         args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void receiveDistanceDurationHash(HashMap<String, String> result) {
+        if(result!=null && result.size()>0){
+            String distance = result.get("distance");
+            String duration  = result.get("duration");
+            String distanceinmeters = result.get("distanceValue");
+            Log.d("BikePlaceFragment","Distance && Duration in receiveDistanceDurationHash::"+distance+"  "+duration+" Distance in meters:::"+distanceinmeters);
+            moveToPricing(distance,distanceinmeters,duration);
+        }
     }
 
     @Override
@@ -151,14 +166,22 @@ public class BikePlaceFragment extends Fragment implements AdapterView.OnItemCli
                 showTimePickerDialog();
                 break;
             case R.id.next:
-                moveToPricing();
+                if (!TextUtils.isEmpty(to_auto_comp_view.getText().toString()) && !TextUtils.isEmpty(autoCompView.getText().toString())) {
+                   String toAddr = to_auto_comp_view.getText().toString();
+                   String   fromAddr = autoCompView.getText().toString();
+                    Log.d("BikePlaceFragment","ToAddress"+toAddr+"  From Addr::::"+fromAddr);
+                    new DistanceTimeFinderAsyncTaskHelper(getActivity(),BikePlaceFragment.this,fromAddr,toAddr).execute();
+                }
+
+              //  moveToPricing();
                 break;
         }
     }
 
-    private void moveToPricing() {
+    private void moveToPricing(String kms,String meters,String duration) {
         String toAddr = "";
         String fromAddr = "";
+
         if (!TextUtils.isEmpty(to_auto_comp_view.getText().toString()) && !TextUtils.isEmpty(autoCompView.getText().toString())) {
             toAddr = to_auto_comp_view.getText().toString();
             fromAddr = autoCompView.getText().toString();
@@ -169,6 +192,11 @@ public class BikePlaceFragment extends Fragment implements AdapterView.OnItemCli
             if (!TextUtils.isEmpty(fromAddr) && !TextUtils.isEmpty(toAddr)) {
                 args.putString("from", fromAddr);
                 args.putString("to", toAddr);
+                if(!TextUtils.isEmpty(kms) && !TextUtils.isEmpty(meters)&& !TextUtils.isEmpty(duration)){
+                    args.putString("inkms",kms);
+                    args.putString("inmeters",meters);
+                    args.putString("time",duration);
+                }
                 f.setArguments(args);
             }
 
@@ -315,6 +343,9 @@ public class BikePlaceFragment extends Fragment implements AdapterView.OnItemCli
             return filter;
         }
     }
+
+
+
 }
 
 

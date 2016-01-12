@@ -92,6 +92,7 @@ Context ctx;
     private String doGetURLConnection(){
         String result="";
         String url = "http://maps.google.com/maps/api/geocode/json?latlng="+latitude+","+longitude+"&sensor=true";
+        Log.d("BikePolerAsyncTakHelper","URL::::"+url);
 
         try {
             URL obj = new URL(url);
