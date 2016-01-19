@@ -8,6 +8,8 @@ import android.util.Base64;
 import android.util.Log;
 
 
+import org.json.JSONObject;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -17,7 +19,8 @@ import java.security.NoSuchAlgorithmException;
  * Created by CHANDRASAIMOHAN on 12/6/2015.
  */
 public class MyApplication extends Application {
-
+    private static MyApplication singleton;
+    JSONObject publishJSON;
     // Note: Your consumer key and secret should be obfuscated in your source code before shipping.
   /*  private static final String TWITTER_KEY = "LEZjsy3ZQwyscBjvLdaz7bNgv";
     private static final String TWITTER_SECRET = "CTsRGP431ghMRSeeDadFxn5usbh4exlmD7qQMINch258Cb3JX9";*/
@@ -25,11 +28,14 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        singleton = this;
       /*  TwitterAuthConfig authConfig = new TwitterAuthConfig(TWITTER_KEY, TWITTER_SECRET);
         Fabric.with(this, new Twitter(authConfig));*/
         printHashKey();
     }
-
+    public static MyApplication getInstance() {
+        return singleton;
+    }
     public void printHashKey(){
         // Add code to print out the key hash
         try {
@@ -45,5 +51,13 @@ public class MyApplication extends Application {
         } catch (NoSuchAlgorithmException e) {
                e.printStackTrace();
         }
+    }
+
+    public JSONObject getPublishJSON() {
+        return publishJSON;
+    }
+
+    public void setPublishJSON(JSONObject publishJSON) {
+        this.publishJSON = publishJSON;
     }
 }

@@ -22,10 +22,15 @@ import android.widget.Toast;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
+import com.facebook.login.LoginResult;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.ConnectionResult;
@@ -52,7 +57,7 @@ import java.util.Arrays;
  * Use the {@link SocialFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SocialFragment extends Fragment implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener ,GoogleApiClient.ConnectionCallbacks{
+public class SocialFragment extends Fragment implements View.OnClickListener/*, GoogleApiClient.OnConnectionFailedListener ,GoogleApiClient.ConnectionCallbacks*/{
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -115,8 +120,10 @@ public class SocialFragment extends Fragment implements View.OnClickListener, Go
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+        Log.d(TAG, "in onCreate()...........");
         sharedUtils = new SharedPreferencesUtils();
-        initializeFaceBook();
+        initFB();
+       //  initializeFaceBook();
       // initializeGoogleSignIn();
     }
 
@@ -144,7 +151,7 @@ public class SocialFragment extends Fragment implements View.OnClickListener, Go
             loginPassword = (EditText)loginLayout.findViewById(R.id.login_pwd);
 
         }
-
+/*
     private void initializeGoogleSignIn(){
       Log.d(TAG, "In initializeGoogleSignIn()");
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
@@ -167,7 +174,7 @@ public class SocialFragment extends Fragment implements View.OnClickListener, Go
     @Override
     public void onConnected( Bundle bundle) {
       //  dismissProgressDialog();
-        Log.d(TAG,"In onConnected()");
+        Log.d(TAG, "In onConnected()");
         if (mGoogleApiClient != null) {
             Plus.PeopleApi.load(mGoogleApiClient, "signed_in_user_account_id").setResultCallback(new ResultCallback<People.LoadPeopleResult>() {
                 @Override
@@ -189,7 +196,7 @@ public class SocialFragment extends Fragment implements View.OnClickListener, Go
 
     }
 
-
+*/
     private ProgressDialog initializeProgressDialog() {
         ProgressDialog dialog = new ProgressDialog(getActivity());
         dialog.setIndeterminate(true);
@@ -215,7 +222,8 @@ public class SocialFragment extends Fragment implements View.OnClickListener, Go
                 googlePlusLogin();
                 break;
             case R.id.fbook:
-                fbLogin();
+                 fbLogin();
+                //onFblogin();
                 break;
             case R.id.register_login:
                 getFragmentManager().beginTransaction()
@@ -241,7 +249,9 @@ public class SocialFragment extends Fragment implements View.OnClickListener, Go
 
                 if(email.equalsIgnoreCase(jsonEmailVal)){
                     if(password.equalsIgnoreCase(jsonPassVal)){
-                        launchMapSlidingMenu();
+        //                launchMapSlidingMenu();
+                        sharedUtils.saveStringPreferences(getActivity(),"loginType","emailProfile");
+                        getFragmentManager().beginTransaction().replace(mContainerId,new BikePoolerMapFragment()).commit();
                     }else{
                         Toast.makeText(getActivity(),"Wrong password",Toast.LENGTH_LONG).show();
                     }
@@ -284,16 +294,60 @@ private void googlePlusLogin(){
     private void fbLogin(){
         LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("public_profile", "user_friends"));
     }
+  private void initFB(){
+    FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
+    callbackManager = CallbackManager.Factory.create();
+    LoginManager.getInstance().registerCallback(callbackManager,
+            new FacebookCallback<LoginResult>() {
+                private ProfileTracker mProfileTracker;
+                @Override
+                public void onSuccess(LoginResult loginResult) {
+                    Log.d("Success", "Login");
 
+                    Profile profile = Profile.getCurrentProfile();
+                    if(profile!=null) {
+                        displayMessage(profile);
+                    }else{
+                        mProfileTracker = new ProfileTracker() {
+                            @Override
+                            protected void onCurrentProfileChanged(Profile profile, Profile profile2) {
+                                Log.v("facebook - profile", "Profile2:::"+profile2.getFirstName());
+                                displayMessage(profile2);
+                                mProfileTracker.stopTracking();
+                            }
+                        };
+                        mProfileTracker.startTracking();
+                    }
+
+                }
+
+                @Override
+                public void onCancel() {
+                    Toast.makeText(getActivity(), "Login Cancel", Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onError(FacebookException exception) {
+                    Toast.makeText(getActivity(), exception.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+}
     private void initializeFaceBook(){
+        Log.d(TAG, "initializeFacebook.......");
+
+if(accessTokenTracker!=null && profileTracker!=null){
+    profileTracker.stopTracking();
+    accessTokenTracker.stopTracking();
+}
+
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
         callbackManager = CallbackManager.Factory.create();
 
-        accessTokenTracker= new AccessTokenTracker() {
+      accessTokenTracker= new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken oldToken, AccessToken newToken) {
-
+                 Log.d(TAG,"onCurrentAccessTokenChanged()");
             }
         };
 
@@ -301,8 +355,10 @@ private void googlePlusLogin(){
             @Override
             protected void onCurrentProfileChanged(Profile oldProfile, Profile newProfile) {
                 //displayMessage(newProfile);
+                Log.d(TAG,"onCurrentProfileChanged()");
             }
         };
+
 
         accessTokenTracker.startTracking();
         profileTracker.startTracking();
@@ -313,32 +369,122 @@ private void googlePlusLogin(){
             Log.d("PROFILE", profile.getName());
             Toast.makeText(getActivity(), "Facebook Profile Name:::" + profile.getName(), Toast.LENGTH_LONG).show();
             sharedUtils.saveStringPreferences(getActivity(), BikeConstants.BIKE_PREFS_DATA, profile.getName());
-            sharedUtils.saveStringPreferences(getActivity(),"loginType","facebook");
-            Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
+
+            JSONObject fbookJson = new JSONObject();
+            try {
+                fbookJson.put("profilename", profile.getName());
+
+
+            }
+            catch (JSONException e){
+                e.printStackTrace();
+            }
+            sharedUtils.saveStringPreferences(getActivity(), "facebook", fbookJson.toString());
+
+            sharedUtils.saveStringPreferences(getActivity(), "loginType", "facebookprofile");
+
+
+            /*Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
             startActivity(i);
-            getActivity().finish();
+            getActivity().finish();*/
+            getFragmentManager().beginTransaction().replace(mContainerId,new BikePoolerMapFragment()).commit();
         }
     }
 
+    private void launchNext(){
+        sharedUtils.saveStringPreferences(getActivity(), "loginType", "facebook");
+            /*Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
+            startActivity(i);
+            getActivity().finish();*/
+        getFragmentManager().beginTransaction().replace(mContainerId,new BikePoolerMapFragment()).commit();
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
+        Log.d(TAG,"onActvityResult ......");
+          callbackManager.onActivityResult(requestCode, resultCode, data);
+          super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        Profile profile = Profile.getCurrentProfile();
-        displayMessage(profile);
+       /* Profile profile = Profile.getCurrentProfile();
+        displayMessage(profile);*/
     }
 
 
-    @Override
+   @Override
     public void onStop() {
         super.onStop();
-        accessTokenTracker.stopTracking();
-        profileTracker.stopTracking();
+        Log.d(TAG, "In onStop().........");
+
+   }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "In onDestroy().........");
+        /*profileTracker.stopTracking();
+        accessTokenTracker.stopTracking();*/
     }
+
+
+    //FaceBook Login
+
+    private void onFblogin()
+    {
+        callbackManager = CallbackManager.Factory.create();
+
+        // Set permissions
+        LoginManager.getInstance().logInWithReadPermissions(this, Arrays.asList("email","user_photos","public_profile"));
+
+        LoginManager.getInstance().registerCallback(callbackManager,
+                new FacebookCallback<LoginResult>() {
+                    @Override
+                    public void onSuccess(LoginResult loginResult) {
+
+                        System.out.println("Success");
+                        GraphRequest.newMeRequest(
+                                loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
+                                    @Override
+                                    public void onCompleted(JSONObject json, GraphResponse response) {
+                                        if (response.getError() != null) {
+                                            // handle error
+                                            System.out.println("ERROR");
+                                        } else {
+                                            System.out.println("Success");
+                                            try {
+
+                                                String jsonresult = String.valueOf(json);
+                                                System.out.println("JSON Result"+jsonresult);
+
+                                                String str_email = json.getString("email");
+                                                String str_id = json.getString("id");
+                                                String str_firstname = json.getString("first_name");
+                                                String str_lastname = json.getString("last_name");
+
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                        }
+                                    }
+
+                                }).executeAsync();
+
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        Log.d(TAG,"On cancel");
+                    }
+
+                    @Override
+                    public void onError(FacebookException error) {
+                        Log.d(TAG,error.toString());
+                    }
+                });
+    }
+
+    //End Facebook Login
 }

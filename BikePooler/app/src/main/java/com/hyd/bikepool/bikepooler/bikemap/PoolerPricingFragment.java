@@ -3,19 +3,24 @@ package com.hyd.bikepool.bikepooler.bikemap;
 
 
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.hyd.bikepool.bikepooler.R;
 import com.hyd.bikepool.bikepooler.SharedPreferencesUtils;
+import com.hyd.bikepool.bikepooler.application.MyApplication;
 import com.hyd.bikepool.bikepooler.fragment.ProfileFragment;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -40,7 +45,12 @@ public class PoolerPricingFragment extends Fragment implements View.OnClickListe
     int distanceinmeteres = -1;
     String duration = "";
     TextView charge;
-
+   JSONObject publishJSON;
+    String from_address = "";
+    String to_address = "";
+    String pickUpTime = "";
+    EditText comments;
+    private String TAG  = "PoolerPricingFragment";
     public PoolerPricingFragment() {
         // Required empty public constructor
     }
@@ -84,8 +94,7 @@ public class PoolerPricingFragment extends Fragment implements View.OnClickListe
         publishRidebtn = (Button)v.findViewById(R.id.publish_btn);
         initPricingLayout(v);
         publishRidebtn.setOnClickListener(this);
-        String from_address = "";
-        String to_address = "";
+
         if(getArguments().getString("from")!=null){
            from_address = getArguments().getString("from");
             fromAddr.setText(from_address);
@@ -121,6 +130,10 @@ public class PoolerPricingFragment extends Fragment implements View.OnClickListe
             TextView timeinmins = (TextView)v.findViewById(R.id.duration);
             timeinmins.setText("Duration"+ duration);
         }
+        if(getArguments().getString("pickuptime")!=null){
+            pickUpTime = getArguments().getString("pickuptime");
+        }
+
 /*
  args.putString("inkms",kms);
                     args.putString("inmeters",meters);
@@ -135,6 +148,8 @@ public class PoolerPricingFragment extends Fragment implements View.OnClickListe
 private void initPricingLayout(View v){
     RelativeLayout incrDecrLayout = (RelativeLayout)v.findViewById(R.id.pluse_minus_layout);
     charge = (TextView)incrDecrLayout.findViewById(R.id.price_val);
+    RelativeLayout commentsLayout = (RelativeLayout)v.findViewById(R.id.comments_layout);
+    comments = (EditText)commentsLayout.findViewById(R.id.commentbox);
 }
     @Override
     public void onClick(View v) {
@@ -146,15 +161,108 @@ private void initPricingLayout(View v){
     }
 
     private void prepareForPublish(){
-        if(!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), "loginType"))){
-           String loginType = prefs.getStringPreferences(getActivity(), "loginType");
-           if(!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), loginType))) {
 
-           }else{
-               getFragmentManager().beginTransaction()
-                       .replace(mContainerId,  ProfileFragment.newInstance("email", "frompricing")).addToBackStack(null)
-                       .commit();
-           }
+        if(!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), "loginType"))){
+            String loginType = prefs.getStringPreferences(getActivity(), "loginType");
+            Log.d(TAG,"LoginType:::::"+loginType);
+            if(!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), loginType))) {
+                fetchDataBasedOnLoginType(loginType);
+            }else{
+                JSONObject emailXcludingJSON = fetchJSONExcludingEmail();
+                MyApplication.getInstance().setPublishJSON(emailXcludingJSON);
+                getFragmentManager().beginTransaction()
+                        .replace(mContainerId,  ProfileFragment.newInstance(loginType, "frompricing")).addToBackStack(null)
+                        .commit();
+            }
         }
+    }
+
+
+    private void fetchDataBasedOnLoginType(String loginType){
+        JSONObject offerRideJOSN = new JSONObject();
+        publishJSON = new JSONObject();
+        if(loginType.equalsIgnoreCase("emailProfile") || loginType.equalsIgnoreCase("facebookprofile")) {
+            if (!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), loginType))) {
+                try {
+                    JSONObject profileTypeJSON = new JSONObject(prefs.getStringPreferences(getActivity(), loginType));
+                   String profileEmail = profileTypeJSON.getString("profileEmail");
+                   String  profileMobile = profileTypeJSON.getString("profileMobile");
+                  String  profileName = profileTypeJSON.getString("profileName");
+                 String   profileBikeNum = profileTypeJSON.getString("profileBikeNum");
+
+                    if(!TextUtils.isEmpty(profileEmail) && !TextUtils.isEmpty(profileMobile) && !TextUtils.isEmpty(profileName) && !TextUtils.isEmpty(profileBikeNum)) {
+                        publishJSON.put("email",profileEmail);
+                        publishJSON.put("mobile", profileMobile);
+                        publishJSON.put("profilename",profileName);
+                        publishJSON.put("bikeNum",profileBikeNum);
+
+                    }
+
+                    if(!TextUtils.isEmpty(from_address) && !TextUtils.isEmpty(to_address)){
+                        publishJSON.put("from",from_address);
+                        publishJSON.put("to",to_address);
+                    }
+
+                    if(!TextUtils.isEmpty(distanceinkms)&& !TextUtils.isEmpty(duration)){
+                        publishJSON.put("distance",distanceinkms);
+                        publishJSON.put("duration",duration);
+                    }
+
+                    if(!TextUtils.isEmpty(charge.getText().toString())){
+                        publishJSON.put("cost",charge.getText().toString());
+                    }
+                    if(!TextUtils.isEmpty(pickUpTime)){
+                        publishJSON.put("pickuptime",pickUpTime);
+                    }
+
+                    if(!TextUtils.isEmpty(comments.getText().toString())){
+                        publishJSON.put("comments",comments.getText().toString());
+                    }
+                    offerRideJOSN.put("offerride", publishJSON);
+
+                    if(profileBikeNum.equalsIgnoreCase("N/A")){
+                        JSONObject emailXcludingJSON = fetchJSONExcludingEmail();
+                        MyApplication.getInstance().setPublishJSON(emailXcludingJSON);
+                        getFragmentManager().beginTransaction()
+                                .replace(mContainerId,  ProfileFragment.newInstance(loginType, "frompricing")).addToBackStack(null)
+                                .commit();
+                    }else {
+                        Log.d("PoolerPricingFragment", "OfferRideJSON:::" + offerRideJOSN.toString());
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private JSONObject fetchJSONExcludingEmail(){
+        JSONObject publishJSON = new JSONObject();
+        try{
+            if(!TextUtils.isEmpty(from_address) && !TextUtils.isEmpty(to_address)){
+                publishJSON.put("from",from_address);
+                publishJSON.put("to",to_address);
+            }
+
+            if(!TextUtils.isEmpty(distanceinkms)&& !TextUtils.isEmpty(duration)){
+                publishJSON.put("distance",distanceinkms);
+                publishJSON.put("duration",duration);
+            }
+
+            if(!TextUtils.isEmpty(charge.getText().toString())){
+                publishJSON.put("cost",charge.getText().toString());
+            }
+            if(!TextUtils.isEmpty(pickUpTime)){
+                publishJSON.put("pickuptime",pickUpTime);
+            }
+
+            if(!TextUtils.isEmpty(comments.getText().toString())){
+                publishJSON.put("comments",comments.getText().toString());
+            }
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return publishJSON;
     }
 }

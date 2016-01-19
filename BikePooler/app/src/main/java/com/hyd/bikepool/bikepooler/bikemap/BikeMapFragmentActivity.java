@@ -156,7 +156,7 @@ SharedPreferencesUtils prefs;
         }
 
         initGPS();
-      TextView offerRide = (TextView)footerLayout.findViewById(R.id.offer_ride);
+    /*  TextView offerRide = (TextView)footerLayout.findViewById(R.id.offer_ride);
         offerRide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -199,6 +199,7 @@ SharedPreferencesUtils prefs;
 
             }
         });
+        */
         // and next place it, for exemple, on bottom right (as Google Maps app)
 
        /* getFragmentManager().addOnBackStackChangedListener(new FragmentManager.OnBackStackChangedListener() {

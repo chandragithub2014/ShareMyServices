@@ -40,7 +40,7 @@ public class RegistrationFragment extends Fragment implements View.OnClickListen
     private String mParam2;
     int mContainerId = -1;
     LinearLayout loginLayout;
-    EditText userName,passWord,retypePassword;
+    EditText userName,passWord,retypePassword,mobileNum;
     Button signUp;
 
     private EmailValidator emailValidator;
@@ -97,6 +97,7 @@ public class RegistrationFragment extends Fragment implements View.OnClickListen
         userName  = (EditText)loginLayout.findViewById(R.id.register_email);
         passWord = (EditText)loginLayout.findViewById(R.id.register_pwd);
         retypePassword = (EditText)loginLayout.findViewById(R.id.retype_pwd);
+        mobileNum = (EditText)loginLayout.findViewById(R.id.user_mobile);
         signUp = (Button)loginLayout.findViewById(R.id.signup);
         signUp.setOnClickListener(this);
     }
@@ -123,7 +124,14 @@ public class RegistrationFragment extends Fragment implements View.OnClickListen
                                           String password = passWord.getText().toString();
                                           String reTypePassword = retypePassword.getText().toString();
                                           if(password.equalsIgnoreCase(reTypePassword)){
-                                              saveInSharedPreferences(userName.getText().toString(),password);
+                                           //   saveInSharedPreferences(userName.getText().toString(),password);
+                                                 if(!TextUtils.isEmpty(mobileNum.getText().toString())){
+                                                     String phoneNum  = mobileNum.getText().toString();
+                                                     savePhoneNumberInPreferences("PhoneNumber",phoneNum);
+                                                     saveInSharedPreferences(userName.getText().toString(), password);
+                                                 }else{
+                                                     Toast.makeText(getActivity(),"Mobile Number Can't be Empty",Toast.LENGTH_LONG).show();
+                                                 }
                                           }else{
                                               Toast.makeText(getActivity(),"Password not matched",Toast.LENGTH_LONG).show();
                                           }
@@ -193,8 +201,17 @@ public class RegistrationFragment extends Fragment implements View.OnClickListen
         }
 */
 
-        Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
+    /*    Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
         startActivity(i);
         getActivity().finish();
+*/
+
+
+        getFragmentManager().beginTransaction().replace(mContainerId, new BikePoolerMapFragment()).commit();
     }
+
+    private void savePhoneNumberInPreferences(String key,String phoneVal){
+        prefs.saveStringPreferences(getActivity(), key, phoneVal);
+    }
+
 }

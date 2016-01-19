@@ -32,6 +32,14 @@
             android:hint="Re type password"
             android:id="@+id/retype_pwd"
             android:layout_gravity="center_horizontal" />
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:ems="10"
+        android:hint="Mobile Num"
+        android:id="@+id/user_mobile"
+        android:layout_gravity="center_horizontal" />
 
     <Button
         android:layout_width="match_parent"

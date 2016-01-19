@@ -14,7 +14,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="16dp"
     android:inputType="textMultiLine"
-    android:lines="8"
+    android:lines="4"
     android:id="@+id/commentbox"
     />
 </RelativeLayout>

@@ -4,7 +4,8 @@ package com.hyd.bikepool.bikepooler.bikemap;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +26,8 @@ import android.widget.Toast;
 
 import com.hyd.bikepool.bikepooler.R;
 import com.hyd.bikepool.bikepooler.SharedPreferencesUtils;
+import com.hyd.bikepool.bikepooler.application.MyApplication;
+import com.hyd.bikepool.bikepooler.fragment.ProfileFragment;
 import com.hyd.bikepool.bikepooler.webservicehelpers.BikeConstants;
 
 import org.json.JSONArray;
@@ -60,6 +63,7 @@ public class RideFinderFragment extends Fragment  implements AdapterView.OnItemC
     LinearLayout fromLayout;
     View v = null;
     AutoCompleteTextView fromLocation;
+    AutoCompleteTextView toLocation;
     String from_address  =  "";
 
 
@@ -72,6 +76,9 @@ public class RideFinderFragment extends Fragment  implements AdapterView.OnItemC
     TextView date_ride,time_ride;
     Calendar dateAndTime;
     SharedPreferencesUtils prefs;
+    private String TAG = "RideFinderFragment";
+    int mContainerId = -1;
+    JSONObject publishJSON;
 
     public RideFinderFragment() {
         // Required empty public constructor
@@ -102,14 +109,16 @@ public class RideFinderFragment extends Fragment  implements AdapterView.OnItemC
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
         prefs = new SharedPreferencesUtils();
-        prefs.saveBooleanPreferences(getActivity(), BikeConstants.BIKE_BOOLEAN_PREFS_DATA,false);
+        prefs.saveBooleanPreferences(getActivity(), BikeConstants.BIKE_BOOLEAN_PREFS_DATA, false);
         dateAndTime = Calendar.getInstance();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        mContainerId = container.getId();
         // Inflate the layout for this fragment
         v =  inflater.inflate(R.layout.fragment_ride_finder, container, false);
 
@@ -125,7 +134,7 @@ public class RideFinderFragment extends Fragment  implements AdapterView.OnItemC
         fromLocation.setAdapter(new GooglePlacesAutocompleteAdapter(getActivity(), R.layout.list_item));
         fromLocation.setOnItemClickListener(this);
 
-        AutoCompleteTextView toLocation = (AutoCompleteTextView)v.findViewById(R.id.leaving_to);
+        toLocation = (AutoCompleteTextView)v.findViewById(R.id.leaving_to);
 
         toLocation.setAdapter(new GooglePlacesAutocompleteAdapter(getActivity(), R.layout.list_item));
         toLocation.setOnItemClickListener(this);
@@ -162,10 +171,99 @@ public class RideFinderFragment extends Fragment  implements AdapterView.OnItemC
             case R.id.time_find_ride:
                 showTimePickerDialog();
                 break;
-            case R.id.next:
+            case R.id.find_rides:
               //  moveToPricing();
+                prepareForPublish();
                 break;
         }
+    }
+
+
+    private void prepareForPublish(){
+
+        if(!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), "loginType"))){
+            String loginType = prefs.getStringPreferences(getActivity(), "loginType");
+            Log.d(TAG,"LoginType:::::"+loginType);
+            if(!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), loginType))) {
+                fetchDataBasedOnLoginType(loginType);
+            }else{
+                JSONObject emailXcludingJSON = fetchJSONExcludingEmail();
+                MyApplication.getInstance().setPublishJSON(emailXcludingJSON);
+                getFragmentManager().beginTransaction()
+                        .replace(mContainerId,  ProfileFragment.newInstance(loginType, "fromridefinder")).addToBackStack(null)
+                        .commit();
+            }
+        }
+    }
+
+
+    private void fetchDataBasedOnLoginType(String loginType){
+        JSONObject offerRideJOSN = new JSONObject();
+        publishJSON = new JSONObject();
+        if(loginType.equalsIgnoreCase("emailProfile") || loginType.equalsIgnoreCase("facebookprofile")) {
+            if (!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), loginType))) {
+                try {
+                    JSONObject profileTypeJSON = new JSONObject(prefs.getStringPreferences(getActivity(), loginType));
+                    String profileEmail = profileTypeJSON.getString("profileEmail");
+                    String  profileMobile = profileTypeJSON.getString("profileMobile");
+                    String  profileName = profileTypeJSON.getString("profileName");
+                  //  String   profileBikeNum = profileTypeJSON.getString("profileBikeNum");
+
+                    if(!TextUtils.isEmpty(profileEmail) && !TextUtils.isEmpty(profileMobile) && !TextUtils.isEmpty(profileName)) {
+                        publishJSON.put("email",profileEmail);
+                        publishJSON.put("mobile", profileMobile);
+                        publishJSON.put("profilename",profileName);
+                //        publishJSON.put("bikeNum",profileBikeNum);
+
+                    }
+
+                    if(!TextUtils.isEmpty(fromLocation.getText().toString()) && !TextUtils.isEmpty(toLocation.getText().toString())){
+                        publishJSON.put("from",fromLocation.getText().toString());
+                        publishJSON.put("to",toLocation.getText().toString());
+                    }
+
+
+                    if(!TextUtils.isEmpty(time_ride.getText().toString())){
+                        publishJSON.put("pickuptime",time_ride.getText().toString());
+                    }
+
+
+                    offerRideJOSN.put("findride",publishJSON);
+                    Log.d("PoolerPricingFragment","OfferRideJSON:::"+offerRideJOSN.toString());
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+
+    private JSONObject fetchJSONExcludingEmail(){
+        JSONObject publishJSON = new JSONObject();
+        try{
+            if(!TextUtils.isEmpty(fromLocation.getText().toString()) && !TextUtils.isEmpty(toLocation.getText().toString())){
+                publishJSON.put("from",fromLocation.getText().toString());
+                publishJSON.put("to",toLocation.getText().toString());
+            }
+
+            /*if(!TextUtils.isEmpty(distanceinkms)&& !TextUtils.isEmpty(duration)){
+                publishJSON.put("distance",distanceinkms);
+                publishJSON.put("duration",duration);
+            }*/
+
+            /*if(!TextUtils.isEmpty(charge.getText().toString())){
+                publishJSON.put("cost",charge.getText().toString());
+            }*/
+            if(!TextUtils.isEmpty(time_ride.getText().toString())){
+                publishJSON.put("pickuptime",time_ride.getText().toString());
+            }
+
+
+        }catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return publishJSON;
     }
 
     private void showTimePickerDialog() {
@@ -259,7 +357,6 @@ public class RideFinderFragment extends Fragment  implements AdapterView.OnItemC
             sb.append("?key=" + API_KEY);
             sb.append("&components=country:ind");
             sb.append("&input=" + URLEncoder.encode(input, "utf8"));
-
             URL url = new URL(sb.toString());
             conn = (HttpURLConnection) url.openConnection();
             InputStreamReader in = new InputStreamReader(conn.getInputStream());

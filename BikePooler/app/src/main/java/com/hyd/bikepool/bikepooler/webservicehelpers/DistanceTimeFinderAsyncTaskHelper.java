@@ -70,7 +70,8 @@ Context ctx;
         if(!TextUtils.isEmpty(response)){
             pd.dismiss();
             Log.d("TAG", "GET  Response::::" + response);
-            HashMap<String,String> jsonResonseHash = parseJSONResponse(response);
+        //    HashMap<String,String> jsonResonseHash = parseJSONResponse(response);
+            HashMap<String,String> jsonResonseHash = parseMatrixJSONResponse(response);
             inReceiveListener.receiveDistanceDurationHash(jsonResonseHash);
 
         }
@@ -103,15 +104,17 @@ Context ctx;
    //     fromAddress = "Sri Laxmi Narasimha Swamy Nilayam K P H B Phase 7 Kukatpally Hyderabad Telangana 500085 India";
    //     toAddress = "Kukatpally Hyderabad Telangana India";
         try {
-            String str_origin = "origin=" + URLEncoder.encode(fromAddress, "UTF-8");
-            String str_dest = "destination=" + URLEncoder.encode(toAddress, "UTF-8");
+            String str_origin = "origins=" + URLEncoder.encode(fromAddress, "UTF-8");
+            String str_dest = "destinations=" + URLEncoder.encode(toAddress, "UTF-8");
 
         // Output format
         String output = "json";
 // Sensor enabled
-        String sensor = "sensor=false";
-        String parameters = str_origin+"&"+str_dest+"&"+sensor;
-        String url = "http://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
+       // String sensor = "sensor=false";
+            String apikey = "AIzaSyDDV6NVf7bCKELYyrwXHJsN5ugLzzVOAhM";
+        String parameters = str_origin+"&"+str_dest+"&"+apikey;
+    //    String url = "http://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
+            String url = "https://maps.googleapis.com/maps/api/distancematrix/"+output+"?"+parameters;
     //    String url = "http://maps.googleapis.com/maps/api/directions/json?origin=Sri%20Laxmi%20Narasimha%20Swamy%20Nilayam%20K%20P%20H%20B%20Phase%207%20Kukatpally%20Hyderabad%20Telangana%20500085%20India&destination=Kukatpally%20Hyderabad%20Telangana%20India&sensor=false";
 
         //
@@ -155,6 +158,52 @@ Context ctx;
         }
 
         return  result;
+    }
+
+
+    private HashMap<String,String> parseMatrixJSONResponse(String jsonResponse){
+        HashMap<String,String> distanceDurationHash = new HashMap<String,String>();
+        try{
+            JSONObject mainjson = new JSONObject(jsonResponse);
+            if(mainjson!=null){
+                JSONArray routesJSONArray = mainjson.getJSONArray("rows");
+                        if(routesJSONArray!=null && routesJSONArray.length()>0){
+                            for(int i = 0 ; i<routesJSONArray.length();i++){
+                                JSONObject elem = routesJSONArray.getJSONObject(i);
+                                if(elem!=null){
+                                    JSONArray legsJSONArray  = elem.getJSONArray("elements");
+                                      if(legsJSONArray!=null && legsJSONArray.length()>0){
+                                          for(int j=0;j<legsJSONArray.length();j++) {
+                                              JSONObject innerElem = legsJSONArray.getJSONObject(j);
+                                              if(innerElem!=null){
+                                                  JSONObject distanceJSONObject = innerElem.getJSONObject("distance");
+                                                  if(distanceJSONObject!=null){
+                                                      String distance = distanceJSONObject.getString("text");
+                                                      Log.d("DistanceTimeFinder","Distance:::"+distance);
+                                                      distanceDurationHash.put("distance",distance);
+                                                      int distanceVal  =  distanceJSONObject.getInt("value");
+                                                      distanceDurationHash.put("distanceValue",""+distanceVal);
+
+                                                  }
+                                                  JSONObject durationJSONObject = innerElem.getJSONObject("duration");
+                                                  if(durationJSONObject!=null){
+                                                      String duration =  durationJSONObject.getString("text");
+                                                      Log.d("DistanceTimeFinder","Duration:::"+duration);
+                                                      distanceDurationHash.put("duration", duration);
+
+                                                  }
+                                              }
+                                          }
+                                      }
+
+                                }
+                            }
+                        }
+            }
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        return  distanceDurationHash;
     }
 
     private HashMap<String,String> parseJSONResponse(String jsonResponse){

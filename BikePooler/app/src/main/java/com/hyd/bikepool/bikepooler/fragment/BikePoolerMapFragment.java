@@ -2,19 +2,30 @@ package com.hyd.bikepool.bikepooler.fragment;
 
 
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.app.Fragment;
+import android.service.textservice.SpellCheckerService;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
+import com.facebook.internal.Utility;
+import com.facebook.login.LoginManager;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -23,12 +34,14 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.hyd.bikepool.bikepooler.MainActivity;
 import com.hyd.bikepool.bikepooler.R;
 import com.hyd.bikepool.bikepooler.SharedPreferencesUtils;
 import com.hyd.bikepool.bikepooler.bikemap.BikePlaceFragment;
 import com.hyd.bikepool.bikepooler.bikemap.RideFinderFragment;
 import com.hyd.bikepool.bikepooler.interfaces.BikePoolerReceiveListener;
 import com.hyd.bikepool.bikepooler.services.GPSTracker;
+import com.hyd.bikepool.bikepooler.slidingmenu.SlidingMenuActivity;
 import com.hyd.bikepool.bikepooler.webservicehelpers.BikeConstants;
 import com.hyd.bikepool.bikepooler.webservicehelpers.BikePoolerAsyncTaskHelper;
 
@@ -59,6 +72,7 @@ public class BikePoolerMapFragment extends Fragment implements BikePoolerReceive
     boolean isActivity = true ;
     SharedPreferencesUtils prefs;
     int mContainerID = -1;
+    Toolbar mtoolBar;
 
     public BikePoolerMapFragment() {
         // Required empty public constructor
@@ -94,7 +108,7 @@ public class BikePoolerMapFragment extends Fragment implements BikePoolerReceive
         }
         prefs = new SharedPreferencesUtils();
         String preferences = prefs.getStringPreferences(getActivity(), BikeConstants.BIKE_PREFS_DATA);
-        prefs.saveBooleanPreferences(getActivity(), BikeConstants.BIKE_BOOLEAN_PREFS_DATA,true);
+        prefs.saveBooleanPreferences(getActivity(), BikeConstants.BIKE_BOOLEAN_PREFS_DATA, true);
 
 
         if(!TextUtils.isEmpty(preferences)){
@@ -119,6 +133,23 @@ public class BikePoolerMapFragment extends Fragment implements BikePoolerReceive
     }
 
 
+    public void disconnectFromFacebook() {
+
+        if (AccessToken.getCurrentAccessToken() == null) {
+            return; // already logged out
+        }
+
+        new GraphRequest(AccessToken.getCurrentAccessToken(), "/me/permissions/", null, HttpMethod.DELETE, new GraphRequest
+                .Callback() {
+            @Override
+            public void onCompleted(GraphResponse graphResponse) {
+
+                LoginManager.getInstance().logOut();
+
+            }
+        }).executeAsync();
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -128,6 +159,30 @@ public class BikePoolerMapFragment extends Fragment implements BikePoolerReceive
         // Inflate the layout for this fragment
         view =  inflater.inflate(R.layout.fragment_bike_mapo, container, false);
         mContainerID = container.getId();
+      //     ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle("Map");
+        mtoolBar = (Toolbar)((AppCompatActivity) getActivity()).findViewById(R.id.toolbar);
+     TextView titleBar = (TextView)mtoolBar.findViewById(R.id.title);
+        titleBar.setText("BikeMap");
+     ImageView logout_img = (ImageView)mtoolBar.findViewById(R.id.logout_icon);
+        logout_img.setVisibility(View.VISIBLE);
+        logout_img.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                /*Utility.clearFacebookCookies(getActivity());
+                LoginManager.getInstance().logOut();*/
+                disconnectFromFacebook();
+                Intent i = new Intent(getActivity(), MainActivity.class); // Your list's Intent
+                //i.setFlags(i.getFlags() | Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_CLEAR_TASK |Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TOP); // Adds the FLAG_ACTIVITY_NO_HISTORY flag
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP); // Adds the FLAG_ACTIVITY_NO_HISTORY flag
+                getActivity().overridePendingTransition(0, 0);
+                getActivity().finish();
+
+                getActivity().overridePendingTransition(0, 0);
+                startActivity(i);
+              //  getActivity().finish();
+            }
+        });
 
       Log.d("BikePoolerMapFragment","In onCreateView() of BikePoolerMapFragment");
         //New
@@ -152,7 +207,7 @@ public class BikePoolerMapFragment extends Fragment implements BikePoolerReceive
                 isActivity = false;
                 //   parent.setVisibility(View.INVISIBLE);
                 parent.removeAllViews();
-                Fragment f = new BikePlaceFragment();
+            /*     Fragment f = new BikePlaceFragment();
                 Bundle args = new Bundle();
                 if(!TextUtils.isEmpty(locationTv.getText().toString())) {
                     args.putString("from", locationTv.getText().toString());
@@ -160,9 +215,18 @@ public class BikePoolerMapFragment extends Fragment implements BikePoolerReceive
                 }
 
 
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.parentLayout, f)
-                        .commit();
+               getFragmentManager().beginTransaction()
+                        .replace(R.id.parentLayout, f).addToBackStack(null)
+                        .commit();*/
+
+                Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
+                Bundle bundle = new Bundle();
+
+                bundle.putInt("position",2);
+                bundle.putString("from", locationTv.getText().toString());
+                i.putExtras(bundle);
+                startActivity(i);
+                getActivity().finish();
             }
         });
 
@@ -173,15 +237,23 @@ public class BikePoolerMapFragment extends Fragment implements BikePoolerReceive
                 //  parent.setVisibility(View.INVISIBLE);
                 isActivity = false;
                 parent.removeAllViews();
-                Fragment f = new RideFinderFragment();
+             /*    Fragment f = new RideFinderFragment();
                 Bundle args = new Bundle();
                 if(!TextUtils.isEmpty(locationTv.getText().toString())) {
                     args.putString("from", locationTv.getText().toString());
                     f.setArguments(args);
                 }
-                getFragmentManager().beginTransaction()
-                        .replace(R.id.parentLayout, f)
-                        .commit();
+               getFragmentManager().beginTransaction()
+                        .replace(R.id.parentLayout, f).addToBackStack(null)
+                        .commit();*/
+
+                Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putInt("position", 1);
+                bundle.putString("from", locationTv.getText().toString());
+                i.putExtras(bundle);
+                startActivity(i);
+                getActivity().finish();
 
 
             }

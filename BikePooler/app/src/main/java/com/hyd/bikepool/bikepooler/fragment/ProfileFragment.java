@@ -3,8 +3,9 @@ package com.hyd.bikepool.bikepooler.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import android.widget.Toast;
 
 import com.hyd.bikepool.bikepooler.R;
 import com.hyd.bikepool.bikepooler.SharedPreferencesUtils;
+import com.hyd.bikepool.bikepooler.application.MyApplication;
 import com.hyd.bikepool.bikepooler.slidingmenu.SlidingMenuActivity;
 import com.hyd.bikepool.bikepooler.utils.Toaster;
 
@@ -42,6 +44,7 @@ public class ProfileFragment extends Fragment implements View.OnClickListener{
     private  String profileEmail,profileName,profileMobile,profileBikeNum;
 String loginType;
     boolean isFromPricePooling = false;
+    boolean isFromRider = false;
     public ProfileFragment() {
         // Required empty public constructor
     }
@@ -75,9 +78,13 @@ String loginType;
            if(mParam2.equalsIgnoreCase("frompricing")){
                isFromPricePooling = true;
            }
+            if(mParam2.equalsIgnoreCase("fromridefinder")){
+                isFromRider = true;
+            }
         }
         prefs = new SharedPreferencesUtils();
         loginType = prefs.getStringPreferences(getActivity(),"loginType");
+        Log.d("Profile", "mParam1::::" + loginType);
        if(!TextUtils.isEmpty(mParam1)) {
            fetchDataFromSharedPreferencesBasedOnLoginType(mParam1);
        }else{
@@ -96,6 +103,11 @@ String loginType;
 
         initViews(view);
         populateData();
+        if(isFromRider){
+            bikeNum.setText("N/A");
+        }else if(isFromPricePooling){
+            bikeNum.setText("");
+        }
         saveProf.setOnClickListener(this);
         return view;
     }
@@ -157,45 +169,107 @@ String loginType;
             jsonObject.put("profileEmail", email.getText().toString());
             jsonObject.put("profileMobile", mobile.getText().toString());
             jsonObject.put("profileBikeNum", bikeNum.getText().toString());
+            if(loginType.equalsIgnoreCase("facebookprofile")){
+                prefs.saveStringPreferences(getActivity(), "facebookprofile", jsonObject.toString());
+            }else {
 
-            prefs.saveStringPreferences(getActivity(), "emailProfile", jsonObject.toString());
+                prefs.saveStringPreferences(getActivity(), "emailProfile", jsonObject.toString());
+            }
 
             /*Intent i = new Intent(getActivity(), SlidingMenuActivity.class);
             startActivity(i);
             getActivity().finish();*/
-           if(isFromPricePooling){
+            JSONObject finalRequestJSON  = getResultJSON(isFromPricePooling, isFromRider);
+            Log.d("ProfileFragment", "Final RequestJSON from Profile Fragment:::" + finalRequestJSON.toString());
+        /*   if(isFromPricePooling){
                Toast.makeText(getActivity(),"Published Offer",Toast.LENGTH_LONG).show();
+               JSONObject finalRequestJSON  = getResultJSON( isFromPricePooling, isFromRider);
+               JSONObject publishJSON = MyApplication.getInstance().getPublishJSON();
+               if(publishJSON!=null){
+                   if(!TextUtils.isEmpty(email.getText().toString()) && !TextUtils.isEmpty(mobile.getText().toString()) && !TextUtils.isEmpty(name.getText().toString()) && !TextUtils.isEmpty(bikeNum.getText().toString())) {
+                       publishJSON.put("email",email.getText().toString());
+                       publishJSON.put("mobile", mobile.getText().toString());
+                       publishJSON.put("profilename",name.getText().toString());
+                       publishJSON.put("bikeNum",bikeNum.getText().toString());
+
+                   }
+                   JSONObject offerRideJOSN = new JSONObject();
+                   offerRideJOSN.put("offerride",publishJSON);
+                   Log.d("ProfileFragment", "OfferRideJSON from Profile Fragment:::" + offerRideJOSN.toString());
+               }
                isFromPricePooling = false;
-           }
+           }*/
         }catch (JSONException e){
             e.printStackTrace();
         }
     }
 
+    private JSONObject getResultJSON(boolean isFromPricePooling,boolean isFromRider){
+        JSONObject resultJSON = new JSONObject();
+   try{
+       JSONObject publishJSON = MyApplication.getInstance().getPublishJSON();
+       if(publishJSON!=null){
+           if(!TextUtils.isEmpty(email.getText().toString()) && !TextUtils.isEmpty(mobile.getText().toString()) && !TextUtils.isEmpty(name.getText().toString()) && !TextUtils.isEmpty(bikeNum.getText().toString())) {
+               publishJSON.put("email",email.getText().toString());
+               publishJSON.put("mobile", mobile.getText().toString());
+               publishJSON.put("profilename", name.getText().toString());
+               if(isFromPricePooling) {
+                   publishJSON.put("bikeNum", bikeNum.getText().toString());
+               }
+
+           }
+           if(isFromPricePooling) {
+               resultJSON.put("offerride", publishJSON);
+           }else if(isFromRider){
+               resultJSON.put("findride", publishJSON);
+           }
+           Log.d("ProfileFragment", "OfferRideJSON from Profile Fragment:::" + resultJSON.toString());
+       }
+   }catch (JSONException e){
+       e.printStackTrace();
+   }
+        return  resultJSON;
+    }
 
     private void fetchDataFromSharedPreferencesBasedOnLoginType(String loginType){
-       if(loginType.equalsIgnoreCase("email")){
-           try {
-               JSONObject emailJSON = new JSONObject(prefs.getStringPreferences(getActivity(), loginType));
-               //emailPwdJson.put("emailId"
-             profileEmail =  emailJSON.getString("emailId");
-           }catch (JSONException e){
-               e.printStackTrace();
-           }
-       }
+        Log.d("Profile","LoginType::::"+loginType);
+        if(loginType.equalsIgnoreCase("emailProfile")) {
+            //  if (loginType.equalsIgnoreCase("email")) {
+            try {
+                JSONObject emailJSON = new JSONObject(prefs.getStringPreferences(getActivity(), "email"));
+                profileMobile = prefs.getStringPreferences(getActivity(), "PhoneNumber");
+                //emailPwdJson.put("emailId"
+                profileEmail = emailJSON.getString("emailId");
+            } catch (JSONException e) {
+                e.printStackTrace();
+                //  }
+            }
+        }else if(loginType.equalsIgnoreCase("facebookprofile")){
+            try {
+                JSONObject fbbokJSON = new JSONObject(prefs.getStringPreferences(getActivity(), "facebook"));
+                profileName = fbbokJSON.getString("profilename");
+                //emailPwdJson.put("emailId"
+              //  profileEmail = emailJSON.getString("emailId");
+            } catch (JSONException e) {
+                e.printStackTrace();
+                //  }
+            }
+        }
     }
 
     private void fetchDataBasedOnLoginType(String loginType){
-        if(loginType.equalsIgnoreCase("emailProfile")) {
-            try {
-                JSONObject profileTypeJSON = new JSONObject(prefs.getStringPreferences(getActivity(), loginType));
-                profileEmail = profileTypeJSON.getString("profileEmail");
-                profileMobile = profileTypeJSON.getString("profileMobile");
-                profileName = profileTypeJSON.getString("profileName");
-                profileBikeNum = profileTypeJSON.getString("profileBikeNum");
+        if(loginType.equalsIgnoreCase("emailProfile") || loginType.equalsIgnoreCase("facebookprofile")) {
+            if (!TextUtils.isEmpty(prefs.getStringPreferences(getActivity(), loginType))) {
+                try {
+                    JSONObject profileTypeJSON = new JSONObject(prefs.getStringPreferences(getActivity(), loginType));
+                    profileEmail = profileTypeJSON.getString("profileEmail");
+                    profileMobile = profileTypeJSON.getString("profileMobile");
+                    profileName = profileTypeJSON.getString("profileName");
+                    profileBikeNum = profileTypeJSON.getString("profileBikeNum");
 
-            } catch (JSONException e) {
-                e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

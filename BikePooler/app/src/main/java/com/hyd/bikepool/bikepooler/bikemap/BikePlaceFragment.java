@@ -4,7 +4,9 @@ package com.hyd.bikepool.bikepooler.bikemap;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -124,6 +126,9 @@ public class BikePlaceFragment extends Fragment implements AdapterView.OnItemCli
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_bike_place, container, false);
+       Toolbar mtoolBar = (Toolbar)((AppCompatActivity) getActivity()).findViewById(R.id.toolbar);
+        TextView titleBar = (TextView)mtoolBar.findViewById(R.id.title);
+        titleBar.setText("Offer Ride");
         mContainerId = container.getId();
         String from_address = "";
         if (getArguments() != null) {
@@ -197,11 +202,14 @@ public class BikePlaceFragment extends Fragment implements AdapterView.OnItemCli
                     args.putString("inmeters",meters);
                     args.putString("time",duration);
                 }
+                if(!TextUtils.isEmpty(pickupTime.getText().toString())){
+                    args.putString("pickuptime",pickupTime.getText().toString());
+                }
                 f.setArguments(args);
             }
 
 
-            getActivity().getFragmentManager().beginTransaction()
+            getActivity().getSupportFragmentManager().beginTransaction()
                     .replace(mContainerId, f).addToBackStack(null)
                     .commit();
         }
@@ -256,7 +264,7 @@ public class BikePlaceFragment extends Fragment implements AdapterView.OnItemCli
             sb.append("?key=" + API_KEY);
             sb.append("&components=country:ind");
             sb.append("&input=" + URLEncoder.encode(input, "utf8"));
-
+            Log.d("BikePlaceFragment","URL For Offer Ride:::"+sb.toString());
             URL url = new URL(sb.toString());
             conn = (HttpURLConnection) url.openConnection();
             InputStreamReader in = new InputStreamReader(conn.getInputStream());
